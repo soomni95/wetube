@@ -1,0 +1,6 @@
+/node_moduels
+.env
+/uploads
+.DS_Store
+/assets
+/build
