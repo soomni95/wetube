@@ -13,15 +13,15 @@ export const postJoin = async (req, res) => {
       errorMessage: "Password confirmation does not match.",
     });
   }
-  const exists = await User.exists({ $or: [{ username}, { email }] });
+  const exists = await User.exists({ $or: [{ username }, { email }] });
   if (exists) {
     return res.status(400).render("join", {
       pageTitle,
-      errorMessage: "The username/email is already taken.",
+      errorMessage: "This username/email is already taken.",
     });
   }
   try {
-    await  User.create({
+    await User.create({
       name,
       username,
       email,
@@ -35,7 +35,7 @@ export const postJoin = async (req, res) => {
       errorMessage: error._message,
     });
   }
-}
+};
 
 export const getLogin = async (req, res) => {
   res.render("login", {pageTitle: "Login"});
@@ -46,16 +46,16 @@ export const postLogin = async (req, res) => {
   const pageTitle = "Login";
   const user = await User.findOne({ username, socialOnly: false });
   if (!user) {
-    return res.status(400).render("login", { 
+    return res.status(400).render("login", {
       pageTitle,
-      errorMessage: "An account with this username does not exist.",
+      errorMessage: "An account with this username does not exists.",
     });
   }
-  const ok =  await bcrypt.compare(password, user.password);
+  const ok = await bcrypt.compare(password, user.password);
   if (!ok) {
-    return res.status(400).render("login",{
+    return res.status(400).render("login", {
       pageTitle,
-      errorMessage: "Wrong Password",
+      errorMessage: "Wrong password",
     });
   }
   req.session.loggedIn = true;
@@ -145,27 +145,29 @@ export const logout = (req, res) => {
 };
 
 export const getEdit = (req, res) => {
-  return res.render("edit-profile", { pageTitle: "Edit Profile"})
+  return res.render("edit-profile", { pageTitle: "Edit Profile" });
 };
 
 export const postEdit = async (req, res) => {
-  const { 
-    session: { 
+  const {
+    session: {
       user: { _id, avatarUrl },
     },
     body: { name, email, username, location },
-      file,
+    file,
   } = req;
   const isHeroku = process.env.NODE_ENV === "production";
   const updatedUser = await User.findByIdAndUpdate(
-    _id, {
-      avatarUrl: file ? (isHeroku ? file.location : file.path) : avatarUrl, 
+    _id,
+    {
+      avatarUrl: file ? (isHeroku ? file.location : file.path) : avatarUrl,
       name,
       email,
       username,
       location,
     },
-    { new: true });
+    { new: true }
+  );
   req.session.user = updatedUser;
   return res.redirect("/users/edit");
 };
@@ -175,7 +177,7 @@ export const getChangePassword = (req, res) => {
     req.flash("error", "Can't change password.");
     return res.redirect("/");
   }
-  return res.render("users/change-password", {pageTitle: "Change Password"});
+  return res.render("users/change-password", { pageTitle: "Change Password" });
 };
 
 export const postChangePassword = async (req, res) => {
@@ -183,7 +185,7 @@ export const postChangePassword = async (req, res) => {
     session: {
       user: { _id },
     },
-    body: { oldPassword, newPassword, newPasswordConfirmation }, 
+    body: { oldPassword, newPassword, newPasswordConfirmation },
   } = req;
   const user = await User.findById(_id);
   const ok = await bcrypt.compare(oldPassword, user.password);
@@ -194,10 +196,10 @@ export const postChangePassword = async (req, res) => {
     });
   }
   if (newPassword !== newPasswordConfirmation) {
-    return res.status(400).render("/users/change-password", { 
-      pageTitle: "Change Password", 
-      errorMessage: "The new password does not match the confirmation.",
-    })
+    return res.status(400).render("users/change-password", {
+      pageTitle: "Change Password",
+      errorMessage: "The password does not match the confirmation",
+    });
   }
   user.password = newPassword;
   await user.save();
@@ -212,13 +214,13 @@ export const see = async (req, res) => {
     populate: {
       path: "owner",
       model: "User",
-    }
+    },
   });
   if (!user) {
-    return res.status(404).render("404", {pageTitle: "User not found."})
+    return res.status(404).render("404", { pageTitle: "User not found." });
   }
-  return res.render("users/profile", { 
-    pageTitle: user.name, 
+  return res.render("users/profile", {
+    pageTitle: user.name,
     user,
   });
 };
