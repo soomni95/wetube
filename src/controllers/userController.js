@@ -27,7 +27,7 @@ export const postJoin = async (req, res) => {
             email,
             password,
             location,
-        })
+        });
         return res.redirect("/login");
     } catch (error) {
         return res.status(400).render("join", {
@@ -53,9 +53,9 @@ export const postLogin = async (req, res) => {
     }
     const ok =  await bcrypt.compare(password, user.password);
     if(!ok) {
-        return res.status(400).render("login",{
-        pageTitle,
-        errorMessage: "Wrong Password",
+          return res.status(400).render("login",{
+          pageTitle,
+          errorMessage: "Wrong Password",
       });
     }
     req.session.loggedIn = true;
@@ -64,15 +64,15 @@ export const postLogin = async (req, res) => {
 };
 
 export const startGithubLogin = (req, res) => {
-  const baseUrl = 'https://github.com/login/oauth/authorize';
-  const config = {
-      clientId: process.env.GH_CLIENT,
-      allow_signup:false,
-      scope:"read:user user:email",
-  };
-  const params = new URLSearchParams(config).toString();
-  const finalUrl = `${baseUrl}?${params}`;
-  return res.redirect(finalUrl);
+    const baseUrl = "https://github.com/login/oauth/authorize";
+        const config = {
+        client_id: process.env.GH_CLIENT,
+        allow_signup: false,
+        scope: "read:user user:email",
+    };
+    const params = new URLSearchParams(config).toString();
+    const finalUrl = `${baseUrl}?${params}`;
+    return res.redirect(finalUrl);
 };
 
 export const finishGithubLogin = async (req, res) => {
