@@ -45,14 +45,14 @@ export const postLogin = async (req, res) => {
   const { username, password } = req.body;
   const pageTitle = "Login";
   const user = await User.findOne({ username, socialOnly: false });
-  if(!user) {
+  if (!user) {
     return res.status(400).render("login", { 
       pageTitle,
       errorMessage: "An account with this username does not exist.",
     });
   }
   const ok =  await bcrypt.compare(password, user.password);
-  if(!ok) {
+  if (!ok) {
     return res.status(400).render("login",{
       pageTitle,
       errorMessage: "Wrong Password",
@@ -113,8 +113,10 @@ export const finishGithubLogin = async (req, res) => {
       (email) => email.primary === true && email.verified === true
     );
     if (!emailObj) {
-      // set notification
-      return res.redirect("/login");
+      return res.status(400).render("login", { 
+        pageTitle,
+        errorMessage: "Wrong email.",
+      });
     }
     let user = await User.findOne({ email: emailObj.email });
     if (!user) {
@@ -154,13 +156,18 @@ export const postEdit = async (req, res) => {
     body: { name, email, username, location },
       file,
   } = req;
+  const isHeroku = process.env.NODE_ENV === "production";
   const updatedUser = await User.findByIdAndUpdate(
     _id, {
-      avatarUrl: file ? file.path : avatarUrl, name,email,username,location,
+      avatarUrl: file ? (isHeroku ? file.location : file.path) : avatarUrl, 
+      name,
+      email,
+      username,
+      location,
     },
-    {new: true});
+    { new: true });
   req.session.user = updatedUser;
-  return res.redirect("/user/edit");
+  return res.redirect("/users/edit");
 };
 
 export const getChangePassword = (req, res) => {
@@ -174,19 +181,19 @@ export const getChangePassword = (req, res) => {
 export const postChangePassword = async (req, res) => {
   const {
     session: {
-      user: { _id, passwrod },
+      user: { _id },
     },
     body: { oldPassword, newPassword, newPasswordConfirmation }, 
   } = req;
   const user = await User.findById(_id);
   const ok = await bcrypt.compare(oldPassword, user.password);
-  if(!ok) {
+  if (!ok) {
     return res.status(400).render("users/change-password", {
       pageTitle: "Change Password",
       errorMessage: "The current password is incorrect",
     });
   }
-  if(newPassword !== newPasswordConfirmation) {
+  if (newPassword !== newPasswordConfirmation) {
     return res.status(400).render("/users/change-password", { 
       pageTitle: "Change Password", 
       errorMessage: "The new password does not match the confirmation.",
@@ -207,9 +214,9 @@ export const see = async (req, res) => {
       model: "User",
     }
   });
-  if(!user){
+  if (!user) {
     return res.status(404).render("404", {pageTitle: "User not found."})
-  };
+  }
   return res.render("users/profile", { 
     pageTitle: user.name, 
     user,
